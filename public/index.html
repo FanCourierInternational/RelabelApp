@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reverse Logistics Scanner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&family=Roboto&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <button id="themeToggle" title="Toggle dark mode">🌙</button>
+  <div class="container" id="scannerUI">
+    <div class="logo">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9rOzoaEV_tkLCQfzDCXze85E6Q6bl6TFO2Q&s" alt="Logo">
+    </div>
+    <div id="exitInstructions">
+      Press <strong>ALT + F4</strong> to exit scanner kiosk mode
+    </div>
+    <h1>Reverse Logistics Scanner</h1>
+    <div class="form-group">
+      <label for="fileInput">Upload Excel File:</label>
+      <input type="file" id="fileInput" accept=".xlsx">
+      <div id="fileNameLabel" class="fileLabel" style="display:none;"></div>
+    </div>
+    <div class="form-group">
+      <label for="labelInput">Scan Label:</label>
+      <input type="text" id="labelInput" placeholder="Enter label...">
+    </div>
+    <button id="searchButton">Search</button>
+    <div class="checkbox">
+      <input type="checkbox" id="autoPrintCheckbox" checked>
+      <label for="autoPrintCheckbox">AutoPrint</label>
+    </div>
+    <div class="results" id="results" style="display: none;">
+      <p><strong>Batch:</strong> <span id="batchDisplay"></span></p>
+      <p><strong>New Label:</strong> <a id="labelLink" href="#" target="_blank">Open Link</a></p>
+    </div>
+    <div id="notFoundMessage" style="display: none;">Shipment not found</div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    const themeToggle = document.getElementById("themeToggle");
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem("theme", theme);
+      themeToggle.textContent = theme === "dark" ? "☀️" : "🌙";
+    }
+    const savedTheme = localStorage.getItem("theme") || "light";
+    applyTheme(savedTheme);
+    themeToggle.onclick = () => {
+      const current = document.documentElement.getAttribute("data-theme");
+      applyTheme(current === "light" ? "dark" : "light");
+    };
+
+    let excelData = [], searchColumns = [], batchIndex = -1, newLabelIndex = -1;
+    const saved = localStorage.getItem("excelState");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      excelData = parsed.excelData;
+      searchColumns = parsed.searchColumns;
+      batchIndex = parsed.batchIndex;
+      newLabelIndex = parsed.newLabelIndex;
+      if (parsed.fileName) {
+        const label = document.getElementById('fileNameLabel');
+        label.textContent = `Loaded: ${parsed.fileName}`;
+        label.style.display = 'block';
+      }
+    }
+
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (!file) return alert("No file selected.");
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        const headers = rows[0].map(h => h.toString().trim().toLowerCase());
+        batchIndex = headers.indexOf("return batch no");
+        newLabelIndex = headers.indexOf("new label");
+        searchColumns = headers.map((h, i) => (h !== "return batch no" && h !== "new label" ? i : -1)).filter(i => i !== -1);
+        excelData = rows.slice(1);
+
+        localStorage.setItem("excelState", JSON.stringify({
+          excelData,
+          searchColumns,
+          batchIndex,
+          newLabelIndex,
+          fileName: file.name
+        }));
+
+        const label = document.getElementById('fileNameLabel');
+        label.textContent = `Loaded: ${file.name}`;
+        label.style.display = 'block';
+
+        alert('Excel file loaded successfully!');
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    document.getElementById('searchButton').addEventListener('click', handleSearch);
+    document.getElementById('labelInput').addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        handleSearch();
+      }
+    });
+
+    async function handleSearch() {
+      const input = document.getElementById('labelInput').value.trim();
+      if (!input) return alert('Please enter a label!');
+      const resultsDiv = document.getElementById('results');
+      const notFoundMessage = document.getElementById('notFoundMessage');
+      const autoPrint = document.getElementById('autoPrintCheckbox').checked;
+
+      const result = excelData.find(row => searchColumns.some(col => row[col] == input));
+
+      if (result) {
+        const batch = batchIndex !== -1 ? (result[batchIndex] || 'N/A') : 'N/A';
+        const linkEl = document.getElementById('labelLink');
+        document.getElementById('batchDisplay').textContent = batch;
+        linkEl.href = "#";
+        linkEl.textContent = 'Print Ready';
+
+        resultsDiv.style.display = 'block';
+        notFoundMessage.style.display = 'none';
+
+        const awbNo = result[6];
+
+        if (autoPrint && awbNo) {
+          const pdfUrl = `/api/print?awbno=${awbNo}`;
+          try {
+            const res = await fetch(pdfUrl);
+            if (!res.ok) throw new Error("PDF fetch failed");
+            const blob = await res.blob();
+
+            const blobUrl = URL.createObjectURL(blob);
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = blobUrl;
+
+            document.body.appendChild(iframe);
+            iframe.onload = function () {
+              iframe.contentWindow.focus();
+              iframe.contentWindow.print();
+            };
+
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+              URL.revokeObjectURL(blobUrl);
+            }, 10000);
+          } catch (err) {
+            alert("Failed to fetch or print the PDF.");
+            console.error(err);
+          }
+        }
+      } else {
+        resultsDiv.style.display = 'none';
+        notFoundMessage.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
