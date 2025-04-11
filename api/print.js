@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   }
 
   if (!apiKey) {
-    return res.status(500).json({ error: "API key not set in environment" });
+    return res.status(500).json({ error: "API key not set" });
   }
 
   try {
@@ -26,18 +26,9 @@ export default async function handler(req, res) {
       },
     });
 
-    const contentType = pdfRes.headers.get("content-type") || "unknown";
-
+    const contentType = pdfRes.headers.get("content-type") || "";
     if (!pdfRes.ok || !contentType.includes("pdf")) {
-      const bodyText = await pdfRes.text();
-      return res.status(pdfRes.status || 500).json({
-        error: "CourierManager returned a non-PDF response",
-        status: pdfRes.status,
-        contentType,
-        responseBody: bodyText,
-        awbno,
-        debugNote: "Check if AWB is valid and that API key has permission."
-      });
+      return res.status(502).json({ error: "Failed to retrieve a valid PDF from CourierManager." });
     }
 
     const pdfBlob = await pdfRes.blob();
@@ -48,7 +39,6 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store');
     res.status(200).send(Buffer.from(buffer));
   } catch (err) {
-    console.error("Unexpected error:", err);
-    res.status(500).json({ error: "Internal Server Error", details: err.message });
+    res.status(500).json({ error: "Internal Server Error" });
   }
 }
