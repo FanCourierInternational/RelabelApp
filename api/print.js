@@ -10,6 +10,8 @@ export default async function handler(req, res) {
   
     const { awbno } = req.query;
     const apiKey = process.env.CM_API_KEY;
+
+    console.log("CM_API_KEY:", process.env.CM_API_KEY);
   
     if (!awbno) {
       return res.status(400).json({ error: "Missing 'awbno'" });
