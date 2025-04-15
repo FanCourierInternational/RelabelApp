@@ -204,3 +204,14 @@
     z-index: 999;
   }
   
+
+  /* Embedded PDF styling */
+embed#pdfEmbed {
+  width: 90%;
+  height: 800px;
+  margin: 20px auto;
+  display: block;
+  border: none;
+  box-shadow: 0 4px 12px var(--shadow);
+  border-radius: 8px;
+}
