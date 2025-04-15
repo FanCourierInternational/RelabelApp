@@ -147,13 +147,23 @@
               document.body.appendChild(iframe);
 
               iframe.onload = () => {
-                iframe.contentWindow.focus();
-                iframe.contentWindow.print();
-                setTimeout(() => {
-                  document.body.removeChild(iframe);
-                  URL.revokeObjectURL(blobUrl);
-                }, 10000);
-              };
+                  iframe.contentWindow.focus();
+                  iframe.contentWindow.print();
+
+                  // Give time for the print dialog to show and close
+                  setTimeout(() => {
+                    document.body.removeChild(iframe);
+                    URL.revokeObjectURL(blobUrl);
+
+                    // Refocus the scan input field
+                    const inputElem = document.getElementById('labelInput');
+                    if (inputElem) {
+                      inputElem.focus();
+                      inputElem.select();
+                    }
+                  }, 10000); // Adjust this if your print dialog stays longer/shorter
+                };
+
             } catch (err) {
               alert("Failed to fetch or print the PDF.");
               console.error("Print Error:", err);
