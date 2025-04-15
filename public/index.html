@@ -109,72 +109,45 @@
     });
 
     async function handleSearch() {
-  const input = document.getElementById('labelInput').value.trim();
-  if (!input) return alert('Please enter a label!');
-  const resultsDiv = document.getElementById('results');
-  const notFoundMessage = document.getElementById('notFoundMessage');
-  const autoPrint = document.getElementById('autoPrintCheckbox').checked;
+      const input = document.getElementById('labelInput').value.trim();
+      if (!input) return alert('Please enter a label!');
+      const resultsDiv = document.getElementById('results');
+      const notFoundMessage = document.getElementById('notFoundMessage');
+      const autoPrint = document.getElementById('autoPrintCheckbox').checked;
 
-  const result = excelData.find(row => searchColumns.some(col => row[col] == input));
+      const result = excelData.find(row => searchColumns.some(col => row[col] == input));
 
-  if (result) {
-    const batch = batchIndex !== -1 ? (result[batchIndex] || 'N/A') : 'N/A';
-    const awbNo = result[6];
-    document.getElementById('batchDisplay').textContent = batch;
+      if (result) {
+        const batch = batchIndex !== -1 ? (result[batchIndex] || 'N/A') : 'N/A';
+        const awbNo = result[6];
+        document.getElementById('batchDisplay').textContent = batch;
 
-    resultsDiv.style.display = 'block';
-    notFoundMessage.style.display = 'none';
+        resultsDiv.style.display = 'block';
+        notFoundMessage.style.display = 'none';
 
-    const pdfUrl = `/api/print?awbno=${awbNo}`;
-    
-    const existingEmbed = document.getElementById('pdfEmbed');
-    if (existingEmbed) existingEmbed.remove(); // Remove existing embed if any
-    
-    if (awbNo) {
-      if (autoPrint) {
-        try {
-          const res = await fetch(pdfUrl, { cache: 'no-store' });
-          if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
-          const blob = await res.blob();
-          const blobUrl = URL.createObjectURL(blob);
-
-          const iframe = document.createElement('iframe');
-          iframe.style.display = 'none';
-          iframe.src = blobUrl;
-          document.body.appendChild(iframe);
-
-          iframe.onload = () => {
-            iframe.contentWindow.focus();
-            iframe.contentWindow.print();
-            setTimeout(() => {
-              document.body.removeChild(iframe);
-              URL.revokeObjectURL(blobUrl);
-            }, 10000);
-          };
-        } catch (err) {
-          alert("Failed to fetch or print the PDF.");
-          console.error("Print Error:", err);
+        const pdfUrl = `/api/print?awbno=${awbNo}`;
+        
+        const existingEmbed = document.getElementById('pdfEmbed');
+        if (existingEmbed) existingEmbed.remove();
+        
+        if (awbNo) {
+          if (autoPrint) {
+            window.open(pdfUrl, '_blank');
+          } else {
+            const embed = document.createElement('embed');
+            embed.src = pdfUrl;
+            embed.type = 'application/pdf';
+            embed.id = 'pdfEmbed';
+            document.getElementById('pdfContainer').appendChild(embed);
+          }
+        } else {
+          alert('AWB Number Missing!');
         }
       } else {
-        // Embed PDF directly in the page
-        const embed = document.createElement('embed');
-        embed.src = pdfUrl;
-        embed.type = 'application/pdf';
-        embed.id = 'pdfEmbed';
-        embed.style.width = '100%';
-        embed.style.height = '600px';
-        embed.style.marginTop = '20px';
-
-        resultsDiv.appendChild(embed);
+        resultsDiv.style.display = 'none';
+        notFoundMessage.style.display = 'block';
       }
-    } else {
-      alert('AWB Number Missing!');
     }
-  } else {
-    resultsDiv.style.display = 'none';
-    notFoundMessage.style.display = 'block';
-  }
-}
   </script>
 </body>
 </html>
