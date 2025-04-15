@@ -116,47 +116,52 @@
   
       const result = excelData.find(row => searchColumns.some(col => row[col] == input));
   
-      if (result) {
-        const batch = batchIndex !== -1 ? (result[batchIndex] || 'N/A') : 'N/A';
-        const linkEl = document.getElementById('labelLink');
-        document.getElementById('batchDisplay').textContent = batch;
-        linkEl.href = "#";
-        linkEl.textContent = 'Print Ready';
-  
-        resultsDiv.style.display = 'block';
-        notFoundMessage.style.display = 'none';
-  
-        const awbNo = result[6];
-        if (autoPrint && awbNo) {
-          const pdfUrl = `/api/print?awbno=${awbNo}`;
-          try {
-            const res = await fetch(pdfUrl, { cache: 'no-store' });
-            if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
-            const blob = await res.blob();
-            const blobUrl = URL.createObjectURL(blob);
-  
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = blobUrl;
-            document.body.appendChild(iframe);
-  
-            iframe.onload = () => {
-              iframe.contentWindow.focus();
-              iframe.contentWindow.print();
-              setTimeout(() => {
-                document.body.removeChild(iframe);
-                URL.revokeObjectURL(blobUrl);
-              }, 10000);
-            };
-          } catch (err) {
-            alert("Failed to fetch or print the PDF.");
-            console.error("Print Error:", err);
-          }
-        }
-      } else {
-        resultsDiv.style.display = 'none';
-        notFoundMessage.style.display = 'block';
+if (result) {
+  const batch = batchIndex !== -1 ? (result[batchIndex] || 'N/A') : 'N/A';
+  const linkEl = document.getElementById('labelLink');
+  const awbNo = result[6];
+
+  document.getElementById('batchDisplay').textContent = batch;
+
+  if (awbNo) {
+    const pdfUrl = `/api/print?awbno=${awbNo}`;
+    linkEl.href = pdfUrl; // set URL here
+    linkEl.textContent = 'Open Label PDF';
+
+    if (autoPrint) {
+      try {
+        const res = await fetch(pdfUrl, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = blobUrl;
+        document.body.appendChild(iframe);
+
+        iframe.onload = () => {
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+            URL.revokeObjectURL(blobUrl);
+          }, 10000);
+        };
+      } catch (err) {
+        alert("Failed to fetch or print the PDF.");
+        console.error("Print Error:", err);
       }
+    }
+  } else {
+    linkEl.href = "#";
+    linkEl.textContent = "AWB Number Missing";
+  }
+
+  resultsDiv.style.display = 'block';
+  notFoundMessage.style.display = 'none';
+}
+
     }
   </script>
   
