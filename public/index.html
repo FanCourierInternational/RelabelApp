@@ -37,6 +37,8 @@
     <div id="notFoundMessage" style="display: none;">Shipment not found</div>
   </div>
 
+  <div id="pdfContainer"></div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script>
     const themeToggle = document.getElementById("themeToggle");
@@ -154,7 +156,7 @@
           console.error("Print Error:", err);
         }
       } else {
-        // Embed PDF directly in the page when autoprint checked off
+        // Embed PDF directly in the page
         const embed = document.createElement('embed');
         embed.src = pdfUrl;
         embed.type = 'application/pdf';
@@ -173,9 +175,6 @@
     notFoundMessage.style.display = 'block';
   }
 }
-
   </script>
-  
 </body>
 </html>
- 
