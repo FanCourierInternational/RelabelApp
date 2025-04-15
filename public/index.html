@@ -178,6 +178,15 @@
         inputElem.select(); // Still select input even if not found
       }
     }
+    window.onload = function () {
+  setTimeout(() => {
+    const inputElem = document.getElementById('labelInput');
+    if (inputElem) {
+      inputElem.focus();
+      inputElem.select();
+    }
+  }, 100); // Delay ensures all elements are rendered first
+};
   </script>
 </body>
 </html>
