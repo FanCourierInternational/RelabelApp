@@ -154,7 +154,7 @@
           console.error("Print Error:", err);
         }
       } else {
-        // Embed PDF directly in the page
+        // Embed PDF directly in the page when autoprint checked off
         const embed = document.createElement('embed');
         embed.src = pdfUrl;
         embed.type = 'application/pdf';
@@ -178,3 +178,4 @@
   
 </body>
 </html>
+ 
