@@ -126,7 +126,7 @@ if (result) {
   if (awbNo) {
     const pdfUrl = `/api/print?awbno=${awbNo}`;
     linkEl.href = pdfUrl; // set URL here
-    linkEl.textContent = 'Open Label PDF';
+    linkEl.textContent = 'Open Label PDF - CTRL TAB TO GO BACK';
 
     if (autoPrint) {
       try {
