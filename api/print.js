@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url = `https://faneudev.couriermanager.eu/faneudev/API/print?pdf=true&format=A6&awbno=${awbno}`;
+    const url = `https://app.fancourier.eu/faneu/API/print?pdf=true&format=A6&awbno=${awbno}`;
     const pdfRes = await fetch(url, {
       headers: {
         'api_key': apiKey,
