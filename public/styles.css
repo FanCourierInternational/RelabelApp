@@ -165,6 +165,10 @@
     width: 140px;
   }
   
+  .redButton{
+    background-color: rgb(212, 66, 66);
+  }
+
   #notFoundMessage {
     color: #ff4c4c;
     font-weight: bold;

@@ -13,23 +13,26 @@
     <div class="logo">
       <img src="logo.svg" alt="Logo">
     </div>
-    <div id="exitInstructions">
-      Press <strong>ALT + F4</strong> to exit scanner kiosk mode
-    </div>
-    <h1>Reverse Logistics Scanner</h1>
+    <!-- <div id="exitInstructions"> -->
+      <!-- Press <strong>ALT + F4</strong> to exit scanner kiosk mode -->
+    <!-- </div> -->
+    <h1>Aplicație Rescanare</h1>
     <div class="form-group">
-      <label for="fileInput">Upload Excel File:</label>
+      <label for="fileInput">Uploadează Excel:</label>
       <input type="file" id="fileInput" accept=".xlsx">
       <div id="fileNameLabel" class="fileLabel" style="display:none;"></div>
     </div>
     <div class="form-group">
-      <label for="labelInput">Scan Label:</label>
+      <label for="labelInput">Scanează:</label>
       <input type="text" id="labelInput" placeholder="Enter label...">
     </div>
-    <button id="searchButton">Search</button>
     <div class="checkbox">
       <input type="checkbox" id="autoPrintCheckbox" checked>
       <label for="autoPrintCheckbox">AutoPrint</label>
+    </div>
+    <button id="searchButton">Caută</button>
+    <div>
+      <button onclick="window.close()" class="redButton">Închide Aplicație</button>
     </div>
     <div class="results" id="results" style="display: none;">
       <p><strong>Batch:</strong> <span id="batchDisplay"></span></p>
@@ -69,7 +72,7 @@
 
     document.getElementById('fileInput').addEventListener('change', function(event) {
       const file = event.target.files[0];
-      if (!file) return alert("No file selected.");
+      if (!file) return alert("Nu ai selectat niciun fișier");
       const reader = new FileReader();
       reader.onload = function(e) {
         const data = new Uint8Array(e.target.result);
@@ -92,10 +95,10 @@
         }));
 
         const label = document.getElementById('fileNameLabel');
-        label.textContent = `Loaded: ${file.name}`;
+        label.textContent = `Încărcat: ${file.name}`;
         label.style.display = 'block';
 
-        alert('Excel file loaded successfully!');
+        alert('Fișierul Excel a fost încărcat cu succes');
       };
       reader.readAsArrayBuffer(file);
     });
