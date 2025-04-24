@@ -8,42 +8,44 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Theme Toggle Button -->
   <button id="themeToggle" title="Toggle dark mode">🌙</button>
+
+  <!-- Scanner UI Container -->
   <div class="container" id="scannerUI">
     <div class="logo">
       <img src="logo.svg" alt="Logo">
     </div>
-    <!-- <div id="exitInstructions"> -->
-      <!-- Press <strong>ALT + F4</strong> to exit scanner kiosk mode -->
-    <!-- </div> -->
+
+    <!-- Main Header -->
     <h1>Aplicație Rescanare Buch</h1>
-    <div class="form-group">
-      <label for="fileInput">Uploadează Excel:</label>
-      <input type="file" id="fileInput" accept=".xlsx">
-      <div id="fileNameLabel" class="fileLabel" style="display:none;"></div>
-    </div>
+
+    <!-- Scan Input -->
     <div class="form-group">
       <label for="labelInput">Scanează:</label>
-      <input type="text" id="labelInput" placeholder="Enter label...">
+      <input type="text" id="labelInput" placeholder="Enter AWB number...">
     </div>
+
+    <!-- AutoPrint Checkbox -->
     <div class="checkbox">
       <input type="checkbox" id="autoPrintCheckbox" checked>
       <label for="autoPrintCheckbox">AutoPrint</label>
     </div>
+
+    <!-- Search Button -->
     <button id="searchButton">Caută</button>
+
+    <!-- Close Application Button -->
     <div>
       <button onclick="window.close()" class="redButton">Închide Aplicație</button>
     </div>
-    <div class="results" id="results" style="display: none;">
-      <p><strong>Batch:</strong> <span id="batchDisplay"></span></p>
-    </div>
-    <div id="notFoundMessage" style="display: none;">Shipment not found</div>
   </div>
 
+  <!-- PDF Output Container -->
   <div id="pdfContainer"></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script>
+    // Theme Toggle Logic
     const themeToggle = document.getElementById("themeToggle");
     function applyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
@@ -51,58 +53,12 @@
       themeToggle.textContent = theme === "dark" ? "☀️" : "🌙";
     }
     applyTheme(localStorage.getItem("theme") || "light");
-    themeToggle.onclick = () => {
+    themeToggle.addEventListener("click", () => {
       const current = document.documentElement.getAttribute("data-theme");
       applyTheme(current === "light" ? "dark" : "light");
-    };
-
-    let excelData = [], searchColumns = [], batchIndex = -1, newLabelIndex = -1;
-    const saved = localStorage.getItem("excelState");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      excelData = parsed.excelData;
-      searchColumns = parsed.searchColumns;
-      batchIndex = parsed.batchIndex;
-      newLabelIndex = parsed.newLabelIndex;
-      if (parsed.fileName) {
-        document.getElementById('fileNameLabel').textContent = `Loaded: ${parsed.fileName}`;
-        document.getElementById('fileNameLabel').style.display = 'block';
-      }
-    }
-
-    document.getElementById('fileInput').addEventListener('change', function(event) {
-      const file = event.target.files[0];
-      if (!file) return alert("Nu ai selectat niciun fișier");
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-        const headers = rows[0].map(h => h.toString().trim().toLowerCase());
-        batchIndex = headers.indexOf("return batch no");
-        newLabelIndex = headers.indexOf("new label");
-        searchColumns = headers.map((h, i) => (h !== "return batch no" && h !== "new label" ? i : -1)).filter(i => i !== -1);
-        excelData = rows.slice(1);
-
-        localStorage.setItem("excelState", JSON.stringify({
-          excelData,
-          searchColumns,
-          batchIndex,
-          newLabelIndex,
-          fileName: file.name
-        }));
-
-        const label = document.getElementById('fileNameLabel');
-        label.textContent = `Încărcat: ${file.name}`;
-        label.style.display = 'block';
-
-        alert('Fișierul Excel a fost încărcat cu succes');
-      };
-      reader.readAsArrayBuffer(file);
     });
 
+    // Search and Print Handler
     document.getElementById('searchButton').addEventListener('click', handleSearch);
     document.getElementById('labelInput').addEventListener('keydown', function(event) {
       if (event.key === 'Enter') {
@@ -113,93 +69,66 @@
 
     async function handleSearch() {
       const inputElem = document.getElementById('labelInput');
-      const input = inputElem.value.trim();
-      if (!input) return alert('Please enter a label!');
+      const awbNo = inputElem.value.trim();
+      if (!awbNo) {
+        return alert('Please enter AWB number!');
+      }
 
-      const resultsDiv = document.getElementById('results');
-      const notFoundMessage = document.getElementById('notFoundMessage');
       const autoPrint = document.getElementById('autoPrintCheckbox').checked;
+      const pdfUrl = `/api/print?awbno=${awbNo}`;
+      const existingEmbed = document.getElementById('pdfEmbed');
+      if (existingEmbed) existingEmbed.remove();
 
-      const result = excelData.find(row => searchColumns.some(col => row[col] == input));
-
-      if (result) {
-        const batch = batchIndex !== -1 ? (result[batchIndex] || 'N/A') : 'N/A';
-        const awbNo = result[6];
-        document.getElementById('batchDisplay').textContent = batch;
-
-        resultsDiv.style.display = 'block';
-        notFoundMessage.style.display = 'none';
-
-        inputElem.select(); // Auto-select input after search
-
-        const pdfUrl = `/api/print?awbno=${awbNo}`;
-        const existingEmbed = document.getElementById('pdfEmbed');
-        if (existingEmbed) existingEmbed.remove();
-
-        if (awbNo) {
-          if (autoPrint) {
-            try {
-              const res = await fetch(pdfUrl, { cache: 'no-store' });
-              if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
-              const blob = await res.blob();
-              const blobUrl = URL.createObjectURL(blob);
-
-              const iframe = document.createElement('iframe');
-              iframe.style.display = 'none';
-              iframe.src = blobUrl;
-              document.body.appendChild(iframe);
-
-              iframe.onload = () => {
-                  iframe.contentWindow.focus();
-                  iframe.contentWindow.print();
-
-                  // Give time for the print dialog to show and close
-                  setTimeout(() => {
-                    document.body.removeChild(iframe);
-                    URL.revokeObjectURL(blobUrl);
-
-                    // Refocus the scan input field
-                    const inputElem = document.getElementById('labelInput');
-                    if (inputElem) {
-                      inputElem.focus();
-                      inputElem.select();
-                    }
-                  }, 2000); // Adjust this if your print dialog stays longer/shorter
-                };
-
-            } catch (err) {
-              alert("Failed to fetch or print the PDF.");
-              console.error("Print Error:", err);
-            }
-          } else {
-            const embed = document.createElement('embed');
-            embed.src = pdfUrl;
-            embed.type = 'application/pdf';
-            embed.id = 'pdfEmbed';
-            embed.style.width = '100%';
-            embed.style.height = '800px';
-            embed.style.marginTop = '20px';
-
-            document.getElementById('pdfContainer').appendChild(embed);
-          }
-        } else {
-          alert('AWB Number Missing!');
+      try {
+        const res = await fetch(pdfUrl, { cache: 'no-store' });
+        if (!res.ok) {
+          throw new Error(`PDF fetch failed (${res.status})`);
         }
-      } else {
-        resultsDiv.style.display = 'none';
-        notFoundMessage.style.display = 'block';
-        inputElem.select(); // Still select input even if not found
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        if (autoPrint) {
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = blobUrl;
+          document.body.appendChild(iframe);
+          iframe.onload = () => {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+              URL.revokeObjectURL(blobUrl);
+              inputElem.focus();
+              inputElem.select();
+            }, 500);
+          };
+        } else {
+          const iframe = document.createElement('iframe');
+          iframe.id = 'pdfEmbed';
+          iframe.src = blobUrl;
+          iframe.style.width = '100%';
+          iframe.style.height = '100%';
+          document.getElementById('pdfContainer').appendChild(iframe);
+          inputElem.focus();
+          inputElem.select();
+        }
+      } catch (err) {
+        alert('Failed to load PDF.');
+        inputElem.focus();
+        inputElem.select();
       }
     }
+
+    // Autofocus on Load
     window.onload = function () {
-  setTimeout(() => {
-    const inputElem = document.getElementById('labelInput');
-    if (inputElem) {
-      inputElem.focus();
-      inputElem.select();
-    }
-  }, 100); // Delay ensures all elements are rendered first
-};
+      setTimeout(() => {
+        const inputElem = document.getElementById('labelInput');
+        if (inputElem) {
+          inputElem.focus();
+          inputElem.select();
+        }
+      }, 100);
+    };
   </script>
 </body>
 </html>
