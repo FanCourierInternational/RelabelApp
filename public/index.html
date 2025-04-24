@@ -113,93 +113,93 @@
 
     async function handleSearch() {
       const inputElem = document.getElementById('labelInput');
-      const input = inputElem.value.trim();
+      let input = inputElem.value.trim();
       if (!input) return alert('Please enter a label!');
 
-      const resultsDiv = document.getElementById('results');
-      const notFoundMessage = document.getElementById('notFoundMessage');
+      // Patterns to check for trimming
+      const patterns = [
+        /00[1-9]F6821$/,
+        /00[1-9]B7000$/,
+        /00[1-9]B6028$/,
+        /00[1-9]F6820$/
+      ];
+
+      // Check if input matches any pattern and trim if necessary
+      for (const pattern of patterns) {
+        if (pattern.test(input)) {
+          input = input.slice(0, -8); // Remove the last 8 characters
+          break;
+        }
+      }
+
       const autoPrint = document.getElementById('autoPrintCheckbox').checked;
+      const pdfUrl = `/api/print?awbno=${input}`;
+      const existingEmbed = document.getElementById('pdfEmbed');
+      if (existingEmbed) existingEmbed.remove();
 
-      const result = excelData.find(row => searchColumns.some(col => row[col] == input));
+      if (autoPrint) {
+        try {
+          const res = await fetch(pdfUrl, { cache: 'no-store' });
+          if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
 
-      if (result) {
-        const batch = batchIndex !== -1 ? (result[batchIndex] || 'N/A') : 'N/A';
-        const awbNo = result[6];
-        document.getElementById('batchDisplay').textContent = batch;
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = blobUrl;
+          document.body.appendChild(iframe);
 
-        resultsDiv.style.display = 'block';
-        notFoundMessage.style.display = 'none';
+          iframe.onload = () => {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
 
-        inputElem.select(); // Auto-select input after search
-
-        const pdfUrl = `/api/print?awbno=${awbNo}`;
-        const existingEmbed = document.getElementById('pdfEmbed');
-        if (existingEmbed) existingEmbed.remove();
-
-        if (awbNo) {
-          if (autoPrint) {
-            try {
-              const res = await fetch(pdfUrl, { cache: 'no-store' });
-              if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
-              const blob = await res.blob();
-              const blobUrl = URL.createObjectURL(blob);
-
-              const iframe = document.createElement('iframe');
-              iframe.style.display = 'none';
-              iframe.src = blobUrl;
-              document.body.appendChild(iframe);
-
-              iframe.onload = () => {
-                  iframe.contentWindow.focus();
-                  iframe.contentWindow.print();
-
-                  // Give time for the print dialog to show and close
-                  setTimeout(() => {
-                    document.body.removeChild(iframe);
-                    URL.revokeObjectURL(blobUrl);
-
-                    // Refocus the scan input field
-                    const inputElem = document.getElementById('labelInput');
-                    if (inputElem) {
-                      inputElem.focus();
-                      inputElem.select();
-                    }
-                  }, 2000); // Adjust this if your print dialog stays longer/shorter
-                };
-
-            } catch (err) {
-              alert("Failed to fetch or print the PDF.");
-              console.error("Print Error:", err);
-            }
-          } else {
-            const embed = document.createElement('embed');
-            embed.src = pdfUrl;
-            embed.type = 'application/pdf';
-            embed.id = 'pdfEmbed';
-            embed.style.width = '100%';
-            embed.style.height = '800px';
-            embed.style.marginTop = '20px';
-
-            document.getElementById('pdfContainer').appendChild(embed);
-          }
-        } else {
-          alert('AWB Number Missing!');
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+              URL.revokeObjectURL(blobUrl);
+              inputElem.focus();
+              inputElem.select();
+            }, 2000);
+          };
+        } catch (err) {
+          alert("Failed to fetch or print the PDF.");
+          console.error("Print Error:", err);
         }
       } else {
-        resultsDiv.style.display = 'none';
-        notFoundMessage.style.display = 'block';
-        inputElem.select(); // Still select input even if not found
+        try {
+          const res = await fetch(pdfUrl, { cache: 'no-store' });
+          if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
+
+          const embed = document.createElement('embed');
+          embed.src = blobUrl;
+          embed.type = 'application/pdf';
+          embed.id = 'pdfEmbed';
+          embed.style.width = '100%';
+          embed.style.height = '800px';
+          embed.style.marginTop = '20px';
+
+          document.getElementById('pdfContainer').appendChild(embed);
+          inputElem.focus();
+          inputElem.select();
+        } catch (err) {
+          alert('Failed to load PDF.');
+          console.error("Embed Error:", err);
+          inputElem.focus();
+          inputElem.select();
+        }
       }
     }
+
     window.onload = function () {
-  setTimeout(() => {
-    const inputElem = document.getElementById('labelInput');
-    if (inputElem) {
-      inputElem.focus();
-      inputElem.select();
-    }
-  }, 100); // Delay ensures all elements are rendered first
-};
+      setTimeout(() => {
+        const inputElem = document.getElementById('labelInput');
+        if (inputElem) {
+          inputElem.focus();
+          inputElem.select();
+        }
+      }, 100);
+    };
   </script>
 </body>
 </html>
