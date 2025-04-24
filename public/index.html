@@ -8,40 +8,33 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Theme Toggle Button -->
+  <!-- Theme Toggle -->
   <button id="themeToggle" title="Toggle dark mode">🌙</button>
 
-  <!-- Scanner UI Container -->
+  <!-- Main UI -->
   <div class="container" id="scannerUI">
     <div class="logo">
       <img src="logo.svg" alt="Logo">
     </div>
-
-    <!-- Main Header -->
     <h1>Aplicație Rescanare Buch</h1>
 
-    <!-- Scan Input -->
     <div class="form-group">
       <label for="labelInput">Scanează:</label>
       <input type="text" id="labelInput" placeholder="Enter AWB number...">
     </div>
 
-    <!-- AutoPrint Checkbox -->
     <div class="checkbox">
       <input type="checkbox" id="autoPrintCheckbox" checked>
       <label for="autoPrintCheckbox">AutoPrint</label>
     </div>
 
-    <!-- Search Button -->
     <button id="searchButton">Caută</button>
-
-    <!-- Close Application Button -->
     <div>
       <button onclick="window.close()" class="redButton">Închide Aplicație</button>
     </div>
   </div>
 
-  <!-- PDF Output Container -->
+  <!-- PDF Container -->
   <div id="pdfContainer"></div>
 
   <script>
@@ -58,7 +51,6 @@
       applyTheme(current === "light" ? "dark" : "light");
     });
 
-    // Search and Print Handler
     document.getElementById('searchButton').addEventListener('click', handleSearch);
     document.getElementById('labelInput').addEventListener('keydown', function(event) {
       if (event.key === 'Enter') {
@@ -67,27 +59,25 @@
       }
     });
 
+    // Search & Auto-Print Handler
     async function handleSearch() {
       const inputElem = document.getElementById('labelInput');
       const awbNo = inputElem.value.trim();
-      if (!awbNo) {
-        return alert('Please enter AWB number!');
-      }
+      if (!awbNo) return alert('Please enter AWB number!');
 
       const autoPrint = document.getElementById('autoPrintCheckbox').checked;
       const pdfUrl = `/api/print?awbno=${awbNo}`;
       const existingEmbed = document.getElementById('pdfEmbed');
       if (existingEmbed) existingEmbed.remove();
 
-      try {
-        const res = await fetch(pdfUrl, { cache: 'no-store' });
-        if (!res.ok) {
-          throw new Error(`PDF fetch failed (${res.status})`);
-        }
-        const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
+      if (autoPrint) {
+        // Auto-print direct PDF
+        try {
+          const res = await fetch(pdfUrl, { cache: 'no-store' });
+          if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
 
-        if (autoPrint) {
           const iframe = document.createElement('iframe');
           iframe.style.display = 'none';
           iframe.src = blobUrl;
@@ -102,24 +92,39 @@
               inputElem.select();
             }, 500);
           };
-        } else {
+        } catch (err) {
+          alert('AWB Number Missing!');
+        }
+      } else {
+        // Display PDF embed
+        try {
+          const res = await fetch(pdfUrl, { cache: 'no-store' });
+          if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
+          const blob = await res.blob();
+          const blobUrl = URL.createObjectURL(blob);
+
           const iframe = document.createElement('iframe');
           iframe.id = 'pdfEmbed';
           iframe.src = blobUrl;
-          iframe.style.width = '100%';
-          iframe.style.height = '100%';
+          iframe.style.width = '90%';
+          iframe.style.height = '800px';
+          iframe.style.display = 'block';
+          iframe.style.margin = '20px auto';
+          iframe.style.border = 'none';
+          iframe.style.boxShadow = '0 4px 12px var(--shadow)';
+          iframe.style.borderRadius = '8px';
           document.getElementById('pdfContainer').appendChild(iframe);
           inputElem.focus();
           inputElem.select();
+        } catch (err) {
+          alert('Failed to load PDF.');
+          inputElem.focus();
+          inputElem.select();
         }
-      } catch (err) {
-        alert('Failed to load PDF.');
-        inputElem.focus();
-        inputElem.select();
       }
     }
 
-    // Autofocus on Load
+    // Autofocus on page load
     window.onload = function () {
       setTimeout(() => {
         const inputElem = document.getElementById('labelInput');
