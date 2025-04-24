@@ -83,15 +83,26 @@
           iframe.src = blobUrl;
           document.body.appendChild(iframe);
           iframe.onload = () => {
+          try {
             iframe.contentWindow.focus();
             iframe.contentWindow.print();
+
+            // Delay cleanup to ensure the print dialog has time to process
             setTimeout(() => {
               document.body.removeChild(iframe);
               URL.revokeObjectURL(blobUrl);
               inputElem.focus();
               inputElem.select();
-            }, 500);
-          };
+            }, 2000); // Adjust delay as needed
+          } catch (err) {
+            alert("Failed to print the PDF.");
+            console.error("Print Error:", err);
+          }
+        };
+        } catch (err) {
+          alert('Failed to load PDF for printing.');
+          console.error("PDF Load Error:", err);
+          inputElem.focus();
         } catch (err) {
           alert('AWB Number Missing!');
         }
