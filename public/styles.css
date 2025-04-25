@@ -1,217 +1,221 @@
 :root {
-    --bg: #f4f4f4;
-    --text: #222;
-    --primary: #0078D7;
-    --card: #fff;
-    --input-bg: #fff;
-    --result-bg: #f0f0f0;
-    --shadow: rgba(0, 0, 0, 0.1);
-    --transition-speed: 0.3s;
-  }
-  
-  [data-theme="dark"] {
-    --bg: #121212;
-    --text: #e0e0e0;
-    --primary: #4db8ff;
-    --card: #1e1e1e;
-    --input-bg: #2b2b2b;
-    --result-bg: #2a2a2a;
-    --shadow: rgba(0, 0, 0, 0.4);
-  }
-  
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Noto Sans', 'Roboto', sans-serif;
-    background-color: var(--bg);
-    color: var(--text);
-    transition: background-color var(--transition-speed), color var(--transition-speed);
-  }
-  
-  .container {
-    max-width: 600px;
-    margin: 60px auto 40px;
-    background: var(--card);
-    border-radius: 12px;
-    box-shadow: 0 6px 20px var(--shadow);
-    padding: 25px 30px;
-    position: relative;
-  }
-  
-  h1 {
-    text-align: center;
-    color: var(--primary);
-    margin-top: 0;
-    font-size: 26px;
-  }
-  
-  .form-group {
-    margin-bottom: 15px;
-  }
-  
-  label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 5px;
-  }
-  
-  input[type="text"],
-  input[type="file"],
-  button {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background-color: var(--input-bg);
-    color: var(--text);
-    transition: background-color var(--transition-speed), color var(--transition-speed);
-  }
-  
-  input[type="file"]::file-selector-button {
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 6px 10px;
-    cursor: pointer;
-  }
-  
-  .fileLabel {
-    font-size: 13px;
-    font-style: italic;
-    color: var(--text);
-    margin-top: 4px;
-  }
-  
-  button {
-    background-color: var(--primary);
-    color: white;
-    border: none;
-    font-size: 16px;
-    margin-top: 10px;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: transform 0.2s ease, background-color 0.2s ease;
-  }
-  
-  button:hover {
-    background-color: #005bb5;
-    transform: translateY(-1px);
-  }
-  
-  .checkbox {
-    display: flex;
-    align-items: center;
-    margin-top: 15px;
-  }
-  
-  .checkbox input[type="checkbox"] {
-    appearance: none;
-    width: 38px;
-    height: 20px;
-    background-color: #ccc;
-    border-radius: 12px;
-    position: relative;
-    outline: none;
-    transition: background-color 0.2s;
-    cursor: pointer;
-  }
-  
-  .checkbox input[type="checkbox"]::before {
-    content: "";
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    top: 2px;
-    left: 2px;
-    background-color: white;
-    border-radius: 50%;
-    transition: transform 0.2s;
-  }
-  
-  .checkbox input[type="checkbox"]:checked {
-    background-color: var(--primary);
-  }
-  
-  .checkbox input[type="checkbox"]:checked::before {
-    transform: translateX(18px);
-  }
-  
-  .checkbox label {
-    margin-left: 10px;
-    font-weight: normal;
-  }
-  
-  .results {
-    margin-top: 20px;
-    background: var(--result-bg);
-    padding: 15px;
-    border-radius: 6px;
-    transition: background-color var(--transition-speed);
-  }
-  
-  .results p {
-    margin: 5px 0;
-  }
-  
-  .logo {
-    text-align: center;
-    margin-bottom: 10px;
-  }
-  
-  .logo img {
-    width: 140px;
-  }
-  
-  #notFoundMessage {
-    color: #ff4c4c;
-    font-weight: bold;
-    text-align: center;
-    margin-top: 20px;
-  }
-  
-  #exitInstructions {
-    font-size: 15px;
-    font-weight: 600;
-    text-align: center;
-    color: #ff4444;
-    background: rgba(255, 0, 0, 0.1);
-    padding: 8px;
-    border-radius: 6px;
-    margin: 10px 0 20px;
-  }
-  
-  #themeToggle {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: none;
-    background: var(--card);
-    color: var(--text);
-    box-shadow: 0 2px 8px var(--shadow);
-    cursor: pointer;
-    font-size: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
-    transition: background-color var(--transition-speed), color var(--transition-speed);
-    z-index: 999;
-  }
-  
+  --bg: #f4f4f4;
+  --text: #222;
+  --primary: #0078D7;
+  --card: #fff;
+  --input-bg: #fff;
+  --result-bg: #f0f0f0;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.3s;
+}
 
-  /* Embedded PDF styling */
-embed#pdfEmbed {
-  width: 90%;
-  height: 800px;
-  margin: 20px auto;
+[data-theme="dark"] {
+  --bg: #121212;
+  --text: #e0e0e0;
+  --primary: #4db8ff;
+  --card: #1e1e1e;
+  --input-bg: #2b2b2b;
+  --result-bg: #2a2a2a;
+  --shadow: rgba(0, 0, 0, 0.4);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Noto Sans', 'Roboto', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+.container {
+  max-width: 600px;
+  margin: 60px auto 40px;
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px var(--shadow);
+  padding: 25px 30px;
+  position: relative;
+}
+
+h1 {
+  text-align: center;
+  color: var(--primary);
+  margin-top: 0;
+  font-size: 26px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  font-weight: bold;
   display: block;
+  margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="file"],
+button {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: var(--input-bg);
+  color: var(--text);
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+input[type="file"]::file-selector-button {
+  background-color: var(--primary);
+  color: white;
   border: none;
-  box-shadow: 0 4px 12px var(--shadow);
-  border-radius: 8px;
+  border-radius: 4px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.fileLabel {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text);
+  margin-top: 4px;
+}
+
+button {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  font-size: 16px;
+  margin-top: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #005bb5;
+  transform: translateY(-1px);
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.checkbox input[type="checkbox"] {
+  appearance: none;
+  width: 38px;
+  height: 20px;
+  background-color: #ccc;
+  border-radius: 12px;
+  position: relative;
+  outline: none;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.checkbox input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 2px;
+  left: 2px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.checkbox input[type="checkbox"]:checked {
+  background-color: var(--primary);
+}
+
+.checkbox input[type="checkbox"]:checked::before {
+  transform: translateX(18px);
+}
+
+.checkbox label {
+  margin-left: 10px;
+  font-weight: normal;
+}
+
+.results {
+  margin-top: 20px;
+  background: var(--result-bg);
+  padding: 15px;
+  border-radius: 6px;
+  transition: background-color var(--transition-speed);
+}
+
+.results p {
+  margin: 5px 0;
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.logo img {
+  width: 140px;
+}
+
+.redButton{
+  background-color: rgb(212, 66, 66);
+}
+
+#notFoundMessage {
+  color: #ff4c4c;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 20px;
+}
+
+#exitInstructions {
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  color: #ff4444;
+  background: rgba(255, 0, 0, 0.1);
+  padding: 8px;
+  border-radius: 6px;
+  margin: 10px 0 20px;
+}
+
+#themeToggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 2px 8px var(--shadow);
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+  z-index: 999;
+}
+
+
+/* Embedded PDF styling */
+embed#pdfEmbed {
+width: 90%;
+height: 800px;
+margin: 20px auto;
+display: block;
+border: none;
+box-shadow: 0 4px 12px var(--shadow);
+border-radius: 8px;
 }
