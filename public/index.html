@@ -1,156 +1,165 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Reetichetare Buch</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans&family=Roboto&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <button id="themeToggle" title="Toggle dark mode">🌙</button>
-  <div class="container" id="scannerUI">
-    <div class="logo">
-      <img src="logo.svg" alt="Logo">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reetichetare Buch</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans&family=Roboto&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <button id="themeToggle" title="Toggle dark mode">🌙</button>
+    <div class="container" id="scannerUI">
+      <div class="logo">
+        <img src="logo.svg" alt="Logo" />
+      </div>
+      <h1>Aplicație Reetichetare BUH</h1>
+      <div class="form-group">
+        <label for="labelInput">Scanează:</label>
+        <input type="text" id="labelInput" placeholder="Enter label..." />
+      </div>
+      <div class="checkbox">
+        <input type="checkbox" id="autoPrintCheckbox" checked />
+        <label for="autoPrintCheckbox">AutoPrint</label>
+      </div>
+      <button id="searchButton">Caută</button>
+      <div>
+        <button onclick="window.close()" class="redButton">
+          Închide Aplicație
+        </button>
+      </div>
+      <div class="results" id="results" style="display: none">
+        <p><strong>Batch:</strong> <span id="batchDisplay"></span></p>
+      </div>
+      <div id="notFoundMessage" style="display: none">Shipment not found</div>
     </div>
-    <h1>Aplicație Reetichetare Buch</h1>
-    <div class="form-group">
-      <label for="labelInput">Scanează:</label>
-      <input type="text" id="labelInput" placeholder="Enter label...">
-    </div>
-    <div class="checkbox">
-      <input type="checkbox" id="autoPrintCheckbox" checked>
-      <label for="autoPrintCheckbox">AutoPrint</label>
-    </div>
-    <button id="searchButton">Caută</button>
-    <div>
-      <button onclick="window.close()" class="redButton">Închide Aplicație</button>
-    </div>
-    <div class="results" id="results" style="display: none;">
-      <p><strong>Batch:</strong> <span id="batchDisplay"></span></p>
-    </div>
-    <div id="notFoundMessage" style="display: none;">Shipment not found</div>
-  </div>
 
-  <div id="pdfContainer"></div>
+    <div id="pdfContainer"></div>
 
-  <script>
-const themeToggle = document.getElementById("themeToggle");
-    function applyTheme(theme) {
-      document.documentElement.setAttribute("data-theme", theme);
-      localStorage.setItem("theme", theme);
-      themeToggle.textContent = theme === "dark" ? "☀️" : "🌙";
-    }
-    applyTheme(localStorage.getItem("theme") || "light");
-    themeToggle.onclick = () => {
-      const current = document.documentElement.getAttribute("data-theme");
-      applyTheme(current === "light" ? "dark" : "light");
-    };
-  document.getElementById('searchButton').addEventListener('click', handleSearch);
-  document.getElementById('labelInput').addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      handleSearch();
-    }
-  });
-
-  async function handleSearch() {
-    const inputElem = document.getElementById('labelInput');
-    let awbNo = inputElem.value.trim();
-    if (!awbNo) return alert('Please enter a label!');
-
-    // Patterns to check for trimming
-    const patterns = [
-      /00[1-9]F6821$/,
-      /00[1-9]B7000$/,
-      /00[1-9]B6028$/,
-      /00[1-9]F6820$/,
-      /00[1-9]K7000$/,
-      /00[1-9]K6028$/,
-      /00[1-9]K6821$/,
-      /00[1-9]K6820$/,
-      /00[1-9]k7000$/,
-      /00[1-9]k6028$/,
-      /00[1-9]k6821$/,
-      /00[1-9]k6820$/,
-    ];
-
-    // Check if input matches any pattern and trim if necessary
-    for (const pattern of patterns) {
-      if (pattern.test(awbNo)) {
-        awbNo = awbNo.slice(0, -8); // Remove the last 8 characters
-        break;
+    <script>
+      const themeToggle = document.getElementById("themeToggle");
+      function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("theme", theme);
+        themeToggle.textContent = theme === "dark" ? "☀️" : "🌙";
       }
-    }
+      applyTheme(localStorage.getItem("theme") || "light");
+      themeToggle.onclick = () => {
+        const current = document.documentElement.getAttribute("data-theme");
+        applyTheme(current === "light" ? "dark" : "light");
+      };
+      document
+        .getElementById("searchButton")
+        .addEventListener("click", handleSearch);
+      document
+        .getElementById("labelInput")
+        .addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            handleSearch();
+          }
+        });
 
-    const autoPrint = document.getElementById('autoPrintCheckbox').checked;
-    const pdfUrl = `/api/print?awbno=${awbNo}`;
-    const existingEmbed = document.getElementById('pdfEmbed');
-    if (existingEmbed) existingEmbed.remove();
+      async function handleSearch() {
+        const inputElem = document.getElementById("labelInput");
+        let awbNo = inputElem.value.trim();
+        if (!awbNo) return alert("Please enter a label!");
 
-    if (autoPrint) {
-      try {
-        const res = await fetch(pdfUrl, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
-        const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
+        // Patterns to check for trimming
+        const patterns = [
+          /00[1-9]F6821$/,
+          /00[1-9]B7000$/,
+          /00[1-9]B6028$/,
+          /00[1-9]F6820$/,
+          /00[1-9]K7000$/,
+          /00[1-9]K6028$/,
+          /00[1-9]K6821$/,
+          /00[1-9]K6820$/,
+          /00[1-9]k7000$/,
+          /00[1-9]k6028$/,
+          /00[1-9]k6821$/,
+          /00[1-9]k6820$/,
+        ];
 
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = blobUrl;
-        document.body.appendChild(iframe);
+        // Check if input matches any pattern and trim if necessary
+        for (const pattern of patterns) {
+          if (pattern.test(awbNo)) {
+            awbNo = awbNo.slice(0, -8); // Remove the last 8 characters
+            break;
+          }
+        }
 
-        iframe.onload = () => {
-          iframe.contentWindow.focus();
-          iframe.contentWindow.print();
+        const autoPrint = document.getElementById("autoPrintCheckbox").checked;
+        const pdfUrl = `/api/print?awbno=${awbNo}`;
+        const existingEmbed = document.getElementById("pdfEmbed");
+        if (existingEmbed) existingEmbed.remove();
 
-          setTimeout(() => {
-            document.body.removeChild(iframe);
-            URL.revokeObjectURL(blobUrl);
+        if (autoPrint) {
+          try {
+            const res = await fetch(pdfUrl, { cache: "no-store" });
+            if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
+            const blob = await res.blob();
+            const blobUrl = URL.createObjectURL(blob);
+
+            const iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            iframe.src = blobUrl;
+            document.body.appendChild(iframe);
+
+            iframe.onload = () => {
+              iframe.contentWindow.focus();
+              iframe.contentWindow.print();
+
+              setTimeout(() => {
+                document.body.removeChild(iframe);
+                URL.revokeObjectURL(blobUrl);
+                inputElem.focus();
+                inputElem.select();
+              }, 3000);
+            };
+          } catch (err) {
+            alert("Failed to fetch or print the PDF.");
+            console.error("Print Error:", err);
+          }
+        } else {
+          try {
+            const res = await fetch(pdfUrl, { cache: "no-store" });
+            if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
+            const blob = await res.blob();
+            const blobUrl = URL.createObjectURL(blob);
+
+            const embed = document.createElement("embed");
+            embed.src = blobUrl;
+            embed.type = "application/pdf";
+            embed.id = "pdfEmbed";
+            embed.style.width = "100%";
+            embed.style.height = "800px";
+            embed.style.marginTop = "20px";
+
+            document.getElementById("pdfContainer").appendChild(embed);
             inputElem.focus();
             inputElem.select();
-          }, 3000);
-        };
-      } catch (err) {
-        alert("Failed to fetch or print the PDF.");
-        console.error("Print Error:", err);
+          } catch (err) {
+            alert("Failed to load PDF.");
+            console.error("Embed Error:", err);
+            inputElem.focus();
+            inputElem.select();
+          }
+        }
       }
-    } else {
-      try {
-        const res = await fetch(pdfUrl, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`PDF fetch failed (${res.status})`);
-        const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
 
-        const embed = document.createElement('embed');
-        embed.src = blobUrl;
-        embed.type = 'application/pdf';
-        embed.id = 'pdfEmbed';
-        embed.style.width = '100%';
-        embed.style.height = '800px';
-        embed.style.marginTop = '20px';
-
-        document.getElementById('pdfContainer').appendChild(embed);
-        inputElem.focus();
-        inputElem.select();
-      } catch (err) {
-        alert('Failed to load PDF.');
-        console.error("Embed Error:", err);
-        inputElem.focus();
-        inputElem.select();
-      }
-    }
-  }
-
-  window.onload = function () {
-    setTimeout(() => {
-      const inputElem = document.getElementById('labelInput');
-      if (inputElem) {
-        inputElem.focus();
-        inputElem.select();
-      }
-    }, 100);
-  };
-  </script>
-</body>
+      window.onload = function () {
+        setTimeout(() => {
+          const inputElem = document.getElementById("labelInput");
+          if (inputElem) {
+            inputElem.focus();
+            inputElem.select();
+          }
+        }, 100);
+      };
+    </script>
+  </body>
 </html>
